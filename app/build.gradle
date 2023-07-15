@@ -1,0 +1,24 @@
+plugins {
+  id "com.android.application"
+}
+
+android {
+  buildToolsVersion "30.0.2"
+  compileSdkVersion 27
+
+  defaultConfig {
+    applicationId "com.benlulud.melophony.webapp"
+    minSdkVersion 23
+    targetSdkVersion 26
+    versionCode 1
+    versionName "1.0"
+  }
+}
+
+task appStart(type: Exec, dependsOn: 'installDebug') {
+    commandLine 'adb', 'shell', 'am', 'start', '-n', 'com.benlulud.melophony.webapp/.MainActivity'
+}
+
+dependencies {
+
+}

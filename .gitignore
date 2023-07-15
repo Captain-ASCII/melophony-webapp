@@ -1,0 +1,6 @@
+# Build files
+.gradle
+build
+
+# OpenApi generated files 
+api

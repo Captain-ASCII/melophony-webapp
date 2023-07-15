@@ -1,0 +1,2 @@
+rootProject.name = "Melophony"
+include ":app"
