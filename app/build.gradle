@@ -20,5 +20,6 @@ task appStart(type: Exec, dependsOn: 'installDebug') {
 }
 
 dependencies {
+  implementation "com.android.support:appcompat-v7:27.0.0"
 
 }
