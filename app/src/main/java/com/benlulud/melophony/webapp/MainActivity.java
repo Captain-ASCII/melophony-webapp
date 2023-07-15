@@ -24,7 +24,7 @@ import com.benlulud.melophony.server.Router;
 
 public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final String MELOPHONY_MAIN_URL = "https://localhost:1804";
+    private static final String MELOPHONY_MAIN_URL = "http://localhost:1804";
 
     private ApiClient apiClient;
     private Database db;

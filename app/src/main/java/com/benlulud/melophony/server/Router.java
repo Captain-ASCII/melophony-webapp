@@ -33,7 +33,7 @@ public class Router extends RouterNanoHTTPD {
     private SocketHandler socketHandler;
 
     public Router(final Context context) throws IOException {
-        super(1804);
+        super("localhost", 1804);
         this.context = context;
         this.socketHandler = new SocketHandler();
         addMappings();
