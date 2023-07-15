@@ -16,10 +16,14 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+import com.benlulud.melophony.server.Router;
+
+
 public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final String MELOPHONY_MAIN_URL = "https://melophony.ddns.net/public/index.html";
+    private static final String MELOPHONY_MAIN_URL = "https://localhost:1804";
 
+    private Router router;
     private WebView webView;
 
     @Override
@@ -27,12 +31,19 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         Log.i(TAG, "onCreate");
 
+        try {
+
+            router = new Router(this);
+
             setContentView(R.layout.main_activity);
             requestDisableDoze();
 
             webView = (WebView) findViewById(R.id.webView);
             webView.setWebViewClient(new AppWebViewClient());
             loadMelophonyWebApp();
+        } catch (Exception e) {
+            Log.e(TAG, "Unable to start local server: ", e);
+        }
     }
 
     private void requestDisableDoze() {
