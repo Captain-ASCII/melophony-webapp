@@ -14,7 +14,13 @@ import org.nanohttpd.protocols.http.response.Response;
 import org.nanohttpd.protocols.http.response.Status;
 import org.nanohttpd.router.RouterNanoHTTPD;
 
+import com.benlulud.melophony.server.handlers.AbstractRESTHandler;
+import com.benlulud.melophony.server.handlers.ArtistHandler;
+import com.benlulud.melophony.server.handlers.FileHandler;
+import com.benlulud.melophony.server.handlers.PlaylistHandler;
 import com.benlulud.melophony.server.handlers.StaticFileHandler;
+import com.benlulud.melophony.server.handlers.TrackHandler;
+import com.benlulud.melophony.server.handlers.UserHandler;
 public class Router extends RouterNanoHTTPD {
 
     private static final String TAG = Router.class.getSimpleName();
@@ -32,8 +38,25 @@ public class Router extends RouterNanoHTTPD {
         super.addMappings();
         addRoute("(index.html)?", StaticFileHandler.class);
         addRoute("public/.*", StaticFileHandler.class);
+        addMappingsForAspect(UserHandler.class);
+        addMappingsForAspect(FileHandler.class);
+        addMappingsForAspect(TrackHandler.class);
+        addMappingsForAspect(ArtistHandler.class);
+        addMappingsForAspect(PlaylistHandler.class);
     }
 
+    private <T extends AbstractRESTHandler> void addMappingsForAspect(final Class<T> handlerClass) {
+        try {
+            final T handler = handlerClass.newInstance();
+            final Map<String, Collection<Method>> paths = handler.getPaths();
+            for (final String path : paths.keySet()) {
+                Log.i(TAG, "Add route '" + path + "' to: " + handlerClass);
+                addRoute(path, handlerClass);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Unable to instantiate handler class: ", e);
+        }
+    }
 
     @Override
     public Response serve(IHTTPSession session) {
