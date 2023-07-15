@@ -16,6 +16,9 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+import com.benlulud.melophony.api.client.ApiClient;
+import com.benlulud.melophony.api.client.Configuration;
+import com.benlulud.melophony.database.Database;
 import com.benlulud.melophony.server.Router;
 
 
@@ -23,6 +26,8 @@ public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String MELOPHONY_MAIN_URL = "https://localhost:1804";
 
+    private ApiClient apiClient;
+    private Database db;
     private Router router;
     private WebView webView;
 
@@ -32,6 +37,12 @@ public class MainActivity extends Activity {
         Log.i(TAG, "onCreate");
 
         try {
+            this.apiClient = new ApiClient();
+            this.apiClient.setBasePath("https://melophony.ddns.net:1804");
+            Configuration.setDefaultApiClient(apiClient);
+
+            this.db = Database.getDatabase(this);
+            this.apiClient.addDefaultHeader(Constants.AUTHORIZATION_HEADER, db.getPersistedData(Constants.TOKEN_KEY));
 
             router = new Router(this);
 
