@@ -76,11 +76,8 @@ public abstract class AbstractRESTHandler<T extends IModel> extends DefaultHandl
 
     private boolean isAuthorized(final String matchedUri, final Method method) {
         for (final Map.Entry<String, Collection<Method>> entry : paths.entrySet()) {
-            Log.i("#dbl#", "path: " + matchedUri + ", test: " + entry.getKey());
             if (entry.getKey().equals(matchedUri)) {
-                boolean r = entry.getValue().contains(method);
-                Log.i("#dbl#", "" + r);
-                return r;
+                return entry.getValue().contains(method);
             }
         }
         return false;
