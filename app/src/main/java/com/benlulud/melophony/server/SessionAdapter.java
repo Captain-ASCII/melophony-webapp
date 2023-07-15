@@ -13,15 +13,19 @@ import org.nanohttpd.protocols.http.NanoHTTPD.ResponseException;
 import org.nanohttpd.protocols.http.request.Method;
 import org.nanohttpd.router.RouterNanoHTTPD;
 
+import com.benlulud.melophony.server.sockets.SocketHandler;
 
 
 public class SessionAdapter implements IHTTPSession {
 
     private final IHTTPSession session;
     private final Context context;
-    public SessionAdapter(final IHTTPSession session, final Context context) {
+    private SocketHandler socketHandler;
+
+    public SessionAdapter(final IHTTPSession session, final Context context, final SocketHandler socketHandler) {
         this.session = session;
         this.context = context;
+        this.socketHandler = socketHandler;
     }
 
     // Adapter methods
@@ -30,6 +34,9 @@ public class SessionAdapter implements IHTTPSession {
         return this.context;
     }
 
+    public SocketHandler getSocketHandler() {
+        return this.socketHandler;
+    }
 
     // Forwarded methods
 

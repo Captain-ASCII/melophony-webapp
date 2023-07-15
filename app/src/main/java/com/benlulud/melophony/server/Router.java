@@ -19,16 +19,23 @@ import com.benlulud.melophony.server.handlers.ArtistHandler;
 import com.benlulud.melophony.server.handlers.FileHandler;
 import com.benlulud.melophony.server.handlers.PlaylistHandler;
 import com.benlulud.melophony.server.handlers.StaticFileHandler;
+import com.benlulud.melophony.server.handlers.SynchronizationHandler;
 import com.benlulud.melophony.server.handlers.TrackHandler;
 import com.benlulud.melophony.server.handlers.UserHandler;
+import com.benlulud.melophony.server.sockets.SocketHandler;
+
+
 public class Router extends RouterNanoHTTPD {
 
     private static final String TAG = Router.class.getSimpleName();
 
     private Context context;
+    private SocketHandler socketHandler;
+
     public Router(final Context context) throws IOException {
         super(1804);
         this.context = context;
+        this.socketHandler = new SocketHandler();
         addMappings();
         start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
     }
@@ -38,6 +45,7 @@ public class Router extends RouterNanoHTTPD {
         super.addMappings();
         addRoute("(index.html)?", StaticFileHandler.class);
         addRoute("public/.*", StaticFileHandler.class);
+        addRoute("api/synchronization(/capabilities)?", SynchronizationHandler.class);
         addMappingsForAspect(UserHandler.class);
         addMappingsForAspect(FileHandler.class);
         addMappingsForAspect(TrackHandler.class);
