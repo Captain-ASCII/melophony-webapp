@@ -1,0 +1,9 @@
+{
+  "invokerPackage": "com.benlulud.melophony.api.client",
+  "apiPackage": "com.benlulud.melophony.api.interfaces",
+  "modelPackage": "com.benlulud.melophony.api.model",
+  "library": "okhttp-gson",
+  "useAndroidMavenGradlePlugin": "false",
+  "hideGenerationTimestamp": "true",
+  "serializableModel": "true"
+}
