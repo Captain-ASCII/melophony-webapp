@@ -71,11 +71,18 @@ public class UserHandler extends AbstractRESTHandler<User> {
                 }
             }
         });
+        setResponder("POST_api/user/clear-local-data", new IPathResponder() {
+            public Response respond(final int id, final String data) {
+                db.clear();
+                return ServerUtils.response(Status.OK, "Data cleared");
+            }
+        });
     }
 
     public Map<String, Collection<Method>> getPaths() {
         final Map<String, Collection<Method>> paths = super.getPaths();
         paths.put("api/user/login", Arrays.asList(Method.POST));
+        paths.put("api/user/clear-local-data", Arrays.asList(Method.POST));
         return paths;
     }
 

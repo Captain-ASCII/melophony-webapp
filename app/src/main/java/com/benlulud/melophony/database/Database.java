@@ -1,6 +1,7 @@
 package com.benlulud.melophony.database;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -68,6 +69,7 @@ public class Database {
     private DatabaseAspect<ModelFile> files;
     private DatabaseAspect<Playlist> playlists;
     private DatabaseAspect<Track> tracks;
+    private List<DatabaseAspect> aspects;
 
     private ArtistApi artistApi;
     private FileApi fileApi;
@@ -80,11 +82,7 @@ public class Database {
         this.sharedPrefs = context.getSharedPreferences(Constants.MELOPHONY_APP_KEY, 0);
         this.synchronizationState = new LinkedHashMap<String, SynchronizationItem>();
 
-        this.users = new DatabaseAspect<User>(getPersistedData(Constants.USER_KEY, new TypeToken<TreeMap<Integer, User>>(){}));
-        this.artists = new DatabaseAspect<Artist>(getPersistedData(Constants.ARTISTS_KEY, new TypeToken<TreeMap<Integer, Artist>>(){}));
-        this.files = new DatabaseAspect<ModelFile>(getPersistedData(Constants.FILES_KEY, new TypeToken<TreeMap<Integer, ModelFile>>(){}));
-        this.playlists = new DatabaseAspect<Playlist>(getPersistedData(Constants.PLAYLISTS_KEY, new TypeToken<TreeMap<Integer, Playlist>>(){}));
-        this.tracks = new DatabaseAspect<Track>(getPersistedData(Constants.TRACKS_KEY, new TypeToken<TreeMap<Integer, Track>>(){}));
+        this.aspects = Arrays.asList(users, artists, files, playlists, tracks);
 
         this.artistApi = new ArtistApi();
         this.fileApi = new FileApi();
@@ -146,6 +144,21 @@ public class Database {
 
     public DatabaseAspect<Track> getTrackAspect() {
         return this.tracks;
+    }
+
+    public void clear() {
+        // Memory data
+        aspects.forEach(aspect -> aspect.clear());
+
+        // Persisted data
+        final Editor editor = sharedPrefs.edit();
+        editor.clear();
+        editor.commit();
+
+        // Files
+        deleteDirectory(new File(context.getFilesDir(), Constants.PLAYLIST_IMAGES_DIR));
+        deleteDirectory(new File(context.getFilesDir(), Constants.ARTIST_IMAGES_DIR));
+        deleteDirectory(new File(context.getFilesDir(), Constants.TRACKS_DIR));
     }
 
 
@@ -323,5 +336,15 @@ public class Database {
             this.isSuccessfullySynchronized = result;
             return this;
         }
+    }
+
+    private boolean deleteDirectory(File directoryToBeDeleted) {
+        File[] allContents = directoryToBeDeleted.listFiles();
+        if (allContents != null) {
+            for (File file : allContents) {
+                deleteDirectory(file);
+            }
+        }
+        return directoryToBeDeleted.delete();
     }
 }
