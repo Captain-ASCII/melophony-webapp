@@ -84,6 +84,7 @@ public class Router extends RouterNanoHTTPD {
         response.addHeader("access-control-allow-headers", "*");
         response.addHeader("access-control-allow-origin", "*");
         response.addHeader("access-control-allow-methods", "GET,POST,PATCH,DELETE,OPTIONS");
+        response.addHeader("access-control-expose-headers", "Token,Message");
         return response;
     }
 }

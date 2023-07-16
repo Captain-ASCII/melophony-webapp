@@ -57,7 +57,7 @@ public class SynchronizationHandler extends DefaultHandler {
                     return ServerUtils.response(Status.OK, "Able to synchronize");
                 }
             } catch (ApiException e) {
-                Log.e(TAG, "Error while trying to reconnect to server");
+                Log.e(TAG, "Error while trying to reconnect to server: ", e);
             }
             return ServerUtils.response(Status.FORBIDDEN, "Unable to connect anymore, must login again");
         } else {

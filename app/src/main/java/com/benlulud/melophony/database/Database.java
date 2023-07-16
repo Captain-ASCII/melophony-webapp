@@ -236,7 +236,7 @@ public class Database {
                     synchronizeFiles(files, listener, Constants.FILES_KEY, new IDownloader<ModelFile>() {
                         public File getTargetFile(final ModelFile file) {
                             if (file.getFileId() != null) {
-                                return getFile(Constants.TRACKS_DIR, file.getFileId());
+                                return getFile(Constants.TRACKS_DIR, file.getFileId() + ".m4a");
                             }
                             return null;
                         }
@@ -254,7 +254,6 @@ public class Database {
 
     private <T extends IModel> void synchronizeFiles(final DatabaseAspect<T> aspect, final ISynchronizationListener listener,
         final String type, final IDownloader<T> downloader) throws Exception {
-        int nbRetries = 0;
         for (final T object : aspect.getAll()) {
             boolean result = false;
             try {
@@ -268,11 +267,6 @@ public class Database {
                 result = true;
             } catch (ApiException e) {
                 Log.e(TAG, "Unable to request image: ", e);
-                nbRetries++;
-                if (nbRetries > 5) {
-                    Log.e(TAG, e.getMessage());
-                    throw new Exception(e.getMessage());
-                }
                 if (e.getCode() == 403) {
                     throw new Exception("Not authorized");
                 }

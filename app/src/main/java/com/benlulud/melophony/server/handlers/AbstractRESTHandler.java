@@ -121,8 +121,9 @@ public abstract class AbstractRESTHandler<T extends IModel> extends DefaultHandl
     abstract DatabaseAspect<T> getDatabaseAspect();
 
     Response create(final T object) {
-        if (aspect.create(object)) {
-            return ServerUtils.response(Status.CREATED, MESSAGE_SUCCESS);
+        final T createdObject = aspect.create(object);
+        if (createdObject != null) {
+            return ServerUtils.response(Status.CREATED, MESSAGE_SUCCESS, createdObject);
         } else {
             return ServerUtils.response(Status.BAD_REQUEST, "Unable to create.");
         }
@@ -150,7 +151,7 @@ public abstract class AbstractRESTHandler<T extends IModel> extends DefaultHandl
 
     Response delete(final int id) {
         if (aspect.delete(id)) {
-            return ServerUtils.response(Status.OK, MESSAGE_SUCCESS);
+            return ServerUtils.response(Status.NO_CONTENT, MESSAGE_SUCCESS);
         } else {
             return ServerUtils.response(Status.BAD_REQUEST, "Not found.");
         }
