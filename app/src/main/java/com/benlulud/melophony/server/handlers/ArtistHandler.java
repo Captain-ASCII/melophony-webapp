@@ -34,7 +34,7 @@ public class ArtistHandler extends AbstractRESTHandler<Artist> {
                 final Artist modifications = gson.fromJson(data, Artist.class);
                 if (artist != null && modifications != null) {
                     return update(id,
-                        new Artist(artist.getId(), artist.getUser())
+                        new Artist(artist.getUser()).id(artist.getId())
                         .name(ifChange(modifications.getName(), artist.getName()))
                         .imageUrl(ifChange(modifications.getImageUrl(), artist.getImageUrl()))
                         .imageName(ifChange(modifications.getImageName(), artist.getImageName()))

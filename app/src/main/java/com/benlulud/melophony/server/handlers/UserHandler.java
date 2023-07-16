@@ -41,7 +41,7 @@ public class UserHandler extends AbstractRESTHandler<User> {
                 final User modifications = gson.fromJson(data, User.class);
                 if (user != null) {
                     return update(id,
-                        new User(user.getId())
+                        new User().id(user.getId())
                         .firstName(ifChange(modifications.getFirstName(), user.getFirstName()))
                         .lastName(ifChange(modifications.getLastName(), user.getLastName()))
                         .email(ifChange(modifications.getEmail(), user.getEmail()))

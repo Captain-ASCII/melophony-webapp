@@ -33,7 +33,7 @@ public class PlaylistHandler extends AbstractRESTHandler<Playlist> {
                 final Playlist modifications = gson.fromJson(data, Playlist.class);
                 if (playlist != null && modifications != null) {
                     return update(id,
-                        new Playlist(playlist.getId(), ifChange(modifications.getTracks(), playlist.getTracks()), playlist.getUser())
+                        new Playlist(ifChange(modifications.getTracks(), playlist.getTracks()), playlist.getUser()).id(playlist.getId())
                         .name(ifChange(modifications.getName(), playlist.getName()))
                         .imageUrl(ifChange(modifications.getImageUrl(), playlist.getImageUrl()))
                         .imageName(ifChange(modifications.getImageName(), playlist.getImageName()))

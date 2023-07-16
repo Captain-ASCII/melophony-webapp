@@ -28,7 +28,7 @@ public class TrackHandler extends AbstractRESTHandler<Track> {
                 final Track modifications = gson.fromJson(data, Track.class);
                 if (track != null && modifications != null) {
                     return update(id,
-                        new Track(track.getId(), track.getCreationDate(), track.getLastPlay(), track.getUser())
+                        new Track(track.getCreationDate(), track.getLastPlay(), track.getUser()).id(track.getId())
                         .title(ifChange(modifications.getTitle(), track.getTitle()))
                         ._file(ifChange(modifications.getFile(), track.getFile()))
                         .artists(ifChange(modifications.getArtists(), track.getArtists()))
