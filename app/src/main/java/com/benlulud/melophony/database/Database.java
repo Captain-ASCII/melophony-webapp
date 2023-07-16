@@ -1,11 +1,15 @@
 package com.benlulud.melophony.database;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.function.Function;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.TreeMap;
 
 import android.content.Context;
@@ -20,10 +24,12 @@ import com.benlulud.melophony.api.client.ApiException;
 import com.benlulud.melophony.api.interfaces.ArtistApi;
 import com.benlulud.melophony.api.interfaces.FileApi;
 import com.benlulud.melophony.api.interfaces.PlaylistApi;
+import com.benlulud.melophony.api.interfaces.SynchronizationApi;
 import com.benlulud.melophony.api.interfaces.TrackApi;
 import com.benlulud.melophony.api.model.Artist;
 import com.benlulud.melophony.api.model.ModelFile;
 import com.benlulud.melophony.api.model.Playlist;
+import com.benlulud.melophony.api.model.SynchronizationRequestInner;
 import com.benlulud.melophony.api.model.Track;
 import com.benlulud.melophony.api.model.User;
 import com.benlulud.melophony.webapp.Constants;
@@ -75,6 +81,7 @@ public class Database {
     private FileApi fileApi;
     private TrackApi trackApi;
     private PlaylistApi playlistApi;
+    private SynchronizationApi synchroApi;
 
     private Database(final Context context) {
         this.context = context;
@@ -82,15 +89,21 @@ public class Database {
         this.sharedPrefs = context.getSharedPreferences(Constants.MELOPHONY_APP_KEY, 0);
         this.synchronizationState = new LinkedHashMap<String, SynchronizationItem>();
 
+        this.users = new DatabaseAspect<User>(this, "User", Constants.USER_KEY, new TypeToken<TreeMap<Integer, User>>(){});
+        this.artists = new DatabaseAspect<Artist>(this, "Artist", Constants.ARTISTS_KEY, new TypeToken<TreeMap<Integer, Artist>>(){});
+        this.files = new DatabaseAspect<ModelFile>(this, "File", Constants.FILES_KEY, new TypeToken<TreeMap<Integer, ModelFile>>(){});
+        this.playlists = new DatabaseAspect<Playlist>(this, "Playlist", Constants.PLAYLISTS_KEY, new TypeToken<TreeMap<Integer, Playlist>>(){});
+        this.tracks = new DatabaseAspect<Track>(this, "Track", Constants.TRACKS_KEY, new TypeToken<TreeMap<Integer, Track>>(){});
         this.aspects = Arrays.asList(users, artists, files, playlists, tracks);
 
         this.artistApi = new ArtistApi();
         this.fileApi = new FileApi();
         this.trackApi = new TrackApi();
         this.playlistApi = new PlaylistApi();
+        this.synchroApi = new SynchronizationApi();
     }
 
-    private <T> TreeMap<Integer, T> getPersistedData(final String key, final TypeToken<TreeMap<Integer, T>> typeToken) {
+    public <T> TreeMap<Integer, T> getPersistedData(final String key, final TypeToken<TreeMap<Integer, T>> typeToken) {
         final String jsonData = getPersistedData(key);
         if (jsonData == null) {
             return null;
@@ -103,15 +116,29 @@ public class Database {
         }
     }
 
+    public List<SynchronizationRequestInner> getPersistedModifications(final String key) {
+        final String jsonData = getPersistedData(String.format("%s_modifications", key));
+        if (jsonData == null) {
+            return new ArrayList<SynchronizationRequestInner>();
+        }
+        try {
+            return gson.fromJson(jsonData, new TypeToken<List<SynchronizationRequestInner>>(){}.getType());
+        } catch(Exception e) {
+            Log.w(TAG, "Unable to deserialize data: " + jsonData);
+            return new ArrayList<SynchronizationRequestInner>();
+        }
+    }
+
     public String getPersistedData(final String key) {
         return sharedPrefs.getString(key, null);
     }
 
-    private <T extends IModel> void persistData(final String key, final DatabaseAspect<T> aspect) {
+    <T extends IModel> void persistData(final String key, final DatabaseAspect<T> aspect) {
         persistData(key, gson.toJson(aspect.getMap()));
+        persistData(String.format("%s_modifications", key), gson.toJson(aspect.getModifications()));
     }
 
-    private void persistData(final String key, final String value) {
+    void persistData(final String key, final String value) {
         final Editor editor = sharedPrefs.edit();
         editor.putString(key, value);
         editor.commit();
@@ -161,6 +188,9 @@ public class Database {
         deleteDirectory(new File(context.getFilesDir(), Constants.TRACKS_DIR));
     }
 
+    private void clearSynchroModifications() {
+        aspects.forEach(aspect -> aspect.clearModifications());
+    }
 
     public void saveUser(final User user, final String token) {
         users.clear();
@@ -171,8 +201,24 @@ public class Database {
 
     public void synchronize(final ISynchronizationListener listener) {
         boolean result = true;
-        Log.i(TAG, "Start synchronization");
+        Log.i(TAG, "Start synchronization (Step n°1: upload local modifications)");
 
+        final List<SynchronizationRequestInner> allModifications = Stream.of(
+            artists.getModifications().stream(),
+            tracks.getModifications().stream(),
+            playlists.getModifications().stream()
+        ).flatMap(Function.identity()).collect(Collectors.toList());
+
+        if (allModifications.size() > 0) {
+            try {
+                synchroApi.synchronization(allModifications);
+                clearSynchroModifications();
+            } catch (Exception e) {
+                Log.e(TAG, "Error while uploading local modifications: ", e);
+            }
+        }
+
+        Log.i(TAG, "Start synchronization (Step n°2: download server-side modifications and files)");
         result &= synchronizeAspect(Constants.ARTISTS_KEY, artists, new IListSynchronizer<Artist>() {
             public List<Artist> getRemoteList() throws ApiException {
                 return artistApi.artistList();

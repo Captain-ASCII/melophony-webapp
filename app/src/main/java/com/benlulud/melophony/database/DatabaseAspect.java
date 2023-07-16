@@ -1,28 +1,47 @@
 package com.benlulud.melophony.database;
 
+import java.time.format.DateTimeFormatter;
+import java.time.Instant;
 import java.util.Collection;
-import java.util.TreeMap;
 import java.util.List;
-import java.util.Set;
+import java.util.TreeMap;
 
-import android.util.Log;
+import com.google.gson.reflect.TypeToken;
+
+import com.benlulud.melophony.api.model.SynchronizationRequestInner;
+import com.benlulud.melophony.api.model.SynchronizationRequestInner.ModificationTypeEnum;
+import com.benlulud.melophony.api.model.SynchronizationRequestInner.ObjectTypeEnum;
 
 
 public class DatabaseAspect<T extends IModel> {
 
     private static final String TAG = DatabaseAspect.class.getSimpleName();
-    private TreeMap<Integer, T> objects;
 
-    public DatabaseAspect(final TreeMap<Integer, T> persistedObjects) {
+    private Database database;
+    private String type;
+    private String aspectKey;
+    private TreeMap<Integer, T> objects;
+    private List<SynchronizationRequestInner> modifications;
+
+    public DatabaseAspect(final Database database, final String type, final String aspectKey, final TypeToken typeToken) {
+        this.database = database;
+        this.type = type;
+        this.aspectKey = aspectKey;
+        final TreeMap<Integer, T> persistedObjects = database.getPersistedData(aspectKey, typeToken);
         this.objects = (persistedObjects == null) ? new TreeMap<Integer, T>() : persistedObjects;
+        this.modifications = database.getPersistedModifications(aspectKey);
     }
 
-    public boolean create(final T object) {
+    public T create(final T object) {
         try {
-            this.objects.put(this.objects.size() + 1, object);
-            return true;
+            final int localId = this.objects.size() + 1;
+            object.setId(localId);
+            this.objects.put(localId, object);
+            modifications.add(modification(ModificationTypeEnum.CREATION, type, object));
+            database.persistData(aspectKey, this);
+            return object;
         } catch (Exception e) {
-            return false;
+            return null;
         }
     }
 
@@ -62,6 +81,8 @@ public class DatabaseAspect<T extends IModel> {
     public boolean update(final int id, final T object) {
         if (this.objects.containsKey(id)) {
             this.objects.put(id, object);
+            modifications.add(modification(ModificationTypeEnum.UPDATE, type, object));
+            database.persistData(aspectKey, this);
             return true;
         }
         return false;
@@ -69,7 +90,9 @@ public class DatabaseAspect<T extends IModel> {
 
     public boolean delete(final int id) {
         if (this.objects.containsKey(id)) {
-            this.objects.remove(id);
+            final T removedObject = this.objects.remove(id);
+            modifications.add(modification(ModificationTypeEnum.DELETION, type, removedObject));
+            database.persistData(aspectKey, this);
             return true;
         }
         return false;
@@ -77,5 +100,22 @@ public class DatabaseAspect<T extends IModel> {
 
     public void clear() {
         this.objects.clear();
+        this.modifications.clear();
+    }
+
+    private SynchronizationRequestInner modification(final ModificationTypeEnum opType, final String objType, final T object) {
+        return new SynchronizationRequestInner()
+        .modificationType(opType)
+        .objectType(ObjectTypeEnum.fromValue(objType))
+        .modificationDateTime(DateTimeFormatter.ISO_INSTANT.format(Instant.now()))
+        .modificationData(object);
+    }
+
+    List<SynchronizationRequestInner> getModifications() {
+        return this.modifications;
+    }
+
+    void clearModifications() {
+        this.modifications.clear();
     }
 }
