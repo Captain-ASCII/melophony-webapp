@@ -53,6 +53,7 @@ public class Database {
 
     public interface ISynchronizationListener {
         void onItemSynchronized(SynchronizationItem modifiedItem);
+        void onSynchronizationCompleted();
     }
 
     private interface IListSynchronizer<T> {
@@ -306,6 +307,8 @@ public class Database {
                 } catch (Exception e) {
                     Log.e(TAG, "Unauthorized to download files, aborting...");
                 }
+                Log.i(TAG, "File synchronization finished");
+                listener.onSynchronizationCompleted();
             }
         });
         synchronizationThread.start();
