@@ -42,7 +42,7 @@ public class PlaylistHandler extends AbstractRESTHandler<Playlist> {
                 return ServerUtils.notFound();
             }
         });
-        setResponder("GET_api/playlist/:id/image", new IPathResponder() {
+        setResponder("GET_api/playlist/:id/image/:imageName", new IPathResponder() {
             public Response respond(final int id, final String data) {
                 final Playlist playlist = aspect.get(id);
                 if (playlist != null && playlist.getImageName() != null) {
@@ -55,7 +55,7 @@ public class PlaylistHandler extends AbstractRESTHandler<Playlist> {
 
     public Map<String, Collection<Method>> getPaths() {
         final Map<String, Collection<Method>> paths = super.getPaths();
-        paths.put("api/playlist/:id/image", Arrays.asList(Method.GET));
+        paths.put("api/playlist/:id/image/:imageName", Arrays.asList(Method.GET));
         return paths;
     }
 

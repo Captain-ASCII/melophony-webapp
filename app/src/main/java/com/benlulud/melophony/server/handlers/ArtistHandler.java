@@ -43,7 +43,7 @@ public class ArtistHandler extends AbstractRESTHandler<Artist> {
                 return ServerUtils.notFound();
             }
         });
-        setResponder("GET_api/artist/:id/image", new IPathResponder() {
+        setResponder("GET_api/artist/:id/image/:imageName", new IPathResponder() {
             public Response respond(final int id, final String data) {
                 final Artist artist = aspect.get(id);
                 if (artist != null && artist.getImageName() != null) {
@@ -56,7 +56,7 @@ public class ArtistHandler extends AbstractRESTHandler<Artist> {
 
     public Map<String, Collection<Method>> getPaths() {
         final Map<String, Collection<Method>> paths = super.getPaths();
-        paths.put("api/artist/:id/image", Arrays.asList(Method.GET));
+        paths.put("api/artist/:id/image/:imageName", Arrays.asList(Method.GET));
         return paths;
     }
 
