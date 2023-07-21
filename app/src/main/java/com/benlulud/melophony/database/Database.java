@@ -23,6 +23,7 @@ import com.google.gson.reflect.TypeToken;
 import com.benlulud.melophony.api.client.ApiException;
 import com.benlulud.melophony.api.interfaces.ArtistApi;
 import com.benlulud.melophony.api.interfaces.FileApi;
+import com.benlulud.melophony.api.interfaces.KeysApi;
 import com.benlulud.melophony.api.interfaces.PlaylistApi;
 import com.benlulud.melophony.api.interfaces.SynchronizationApi;
 import com.benlulud.melophony.api.interfaces.TrackApi;
@@ -83,6 +84,7 @@ public class Database {
     private TrackApi trackApi;
     private PlaylistApi playlistApi;
     private SynchronizationApi synchroApi;
+    private KeysApi keysApi;
 
     private Database(final Context context) {
         this.context = context;
@@ -102,6 +104,7 @@ public class Database {
         this.trackApi = new TrackApi();
         this.playlistApi = new PlaylistApi();
         this.synchroApi = new SynchronizationApi();
+        this.keysApi = new KeysApi();
     }
 
     public <T> TreeMap<Integer, T> getPersistedData(final String key, final TypeToken<TreeMap<Integer, T>> typeToken) {
@@ -240,6 +243,12 @@ public class Database {
                 return playlistApi.playlistList();
             }
         });
+        try {
+            persistData(Constants.SECRET_KEYS_KEY, gson.toJson(keysApi.getKeys()));
+        } catch (ApiException e) {
+            Log.e(TAG, "Unable to request keys: ", e);
+            result = false;
+        }
         Log.i(TAG, "Synchronization result: " + result);
 
         for (final Playlist playlist : playlists.getAll()) {

@@ -12,6 +12,7 @@ public class Constants {
     public static final String PLAYLISTS_KEY = "playlists";
     public static final String FILES_KEY = "files";
     public static final String TOKEN_KEY = "token";
+    public static final String SECRET_KEYS_KEY = "secretKeys";
 
     public static final String AUTHORIZATION_HEADER = "Authorization";
     public static final String TOKEN_HEADER = "token";

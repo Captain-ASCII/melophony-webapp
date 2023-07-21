@@ -49,7 +49,11 @@ public class ServerUtils {
     }
 
     public static Response response(final IStatus status, final String message, final Object data, final Map<String, String> headers) {
-        final Response response = Response.newFixedLengthResponse(status, "application/json", new Gson().toJson(data));
+        return response(status, message, new Gson().toJson(data), headers);
+    }
+
+    public static Response response(final IStatus status, final String message, final String dataString, final Map<String, String> headers) {
+        final Response response = Response.newFixedLengthResponse(status, "application/json", dataString);
         response.addHeader("Message", message);
         if (headers != null) {
             for (Map.Entry<String, String> header : headers.entrySet()) {

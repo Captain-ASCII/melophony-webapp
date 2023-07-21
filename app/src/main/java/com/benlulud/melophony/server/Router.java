@@ -17,6 +17,7 @@ import org.nanohttpd.router.RouterNanoHTTPD;
 import com.benlulud.melophony.server.handlers.AbstractRESTHandler;
 import com.benlulud.melophony.server.handlers.ArtistHandler;
 import com.benlulud.melophony.server.handlers.FileHandler;
+import com.benlulud.melophony.server.handlers.KeysHandler;
 import com.benlulud.melophony.server.handlers.PlaylistHandler;
 import com.benlulud.melophony.server.handlers.StaticFileHandler;
 import com.benlulud.melophony.server.handlers.SynchronizationHandler;
@@ -46,6 +47,7 @@ public class Router extends RouterNanoHTTPD {
         addRoute("(index.html)?", StaticFileHandler.class);
         addRoute("public/.*", StaticFileHandler.class);
         addRoute("api/synchronization(/capabilities)?", SynchronizationHandler.class);
+        addRoute("api/keys", KeysHandler.class);
         addMappingsForAspect(UserHandler.class);
         addMappingsForAspect(FileHandler.class);
         addMappingsForAspect(TrackHandler.class);
