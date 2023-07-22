@@ -5,11 +5,18 @@ import java.util.Map;
 import android.util.Log;
 
 import org.nanohttpd.protocols.http.response.Response;
+import org.nanohttpd.protocols.http.response.Status;
 
+import com.benlulud.melophony.api.client.ApiException;
+import com.benlulud.melophony.api.client.ApiResponse;
+import com.benlulud.melophony.api.interfaces.ArtistApi;
+import com.benlulud.melophony.api.interfaces.FileApi;
 import com.benlulud.melophony.api.interfaces.TrackApi;
+import com.benlulud.melophony.api.model.ModelFile;
 import com.benlulud.melophony.api.model.Track;
 import com.benlulud.melophony.database.DatabaseAspect;
 import com.benlulud.melophony.server.ServerUtils;
+import com.benlulud.melophony.webapp.Constants;
 
 
 public class TrackHandler extends AbstractRESTHandler<Track> {
@@ -17,11 +24,38 @@ public class TrackHandler extends AbstractRESTHandler<Track> {
     private static final String TAG = UserHandler.class.getSimpleName();
 
     private TrackApi trackApi;
+    private ArtistApi artistApi;
+    private FileApi fileApi;
 
     public TrackHandler() {
         super(Track.class, "track");
         this.trackApi = new TrackApi();
+        this.artistApi = new ArtistApi();
+        this.fileApi = new FileApi();
 
+        setResponder("POST_api/track", new IPathResponder() {
+            public Response respond(final int id, final String data) {
+                try {
+                    final ApiResponse<Track> response = trackApi.trackCreateWithHttpInfo(file, data);
+                    final Track createdTrack = response.getData();
+
+                    final ModelFile fileData = fileApi.fileRead(createdTrack.getFile());
+                    db.getFileAspect().insert(fileData);
+                    file.renameTo(db.getFile(Constants.TRACKS_KEY, fileData.getFileId() + ".m4a"));
+
+                    for (final int artistId : createdTrack.getArtists()) {
+                        db.getArtistAspect().insert(artistApi.artistRead(artistId));
+                    }
+
+                    aspect.insert(createdTrack);
+
+                    return ServerUtils.response(Status.CREATED, "Track created (remotely & locally)", createdTrack);
+                } catch (ApiException e) {
+                    Log.e(TAG, "Unable to create Track: ", e);
+                }
+                return ServerUtils.response(Status.INTERNAL_ERROR, "Unable to create track on server side");
+            }
+        });
         setResponder("PATCH_api/track/:id", new IPathResponder() {
             public Response respond(final int id, final String data) {
                 final Track track = aspect.get(id);

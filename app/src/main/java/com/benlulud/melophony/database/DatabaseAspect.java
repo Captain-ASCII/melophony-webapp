@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.TreeMap;
 
+import android.util.Log;
+
 import com.google.gson.reflect.TypeToken;
 
 import com.benlulud.melophony.api.model.SynchronizationRequestInner;
@@ -46,17 +48,26 @@ public class DatabaseAspect<T extends IModel> {
     }
 
     public boolean bulkInsert(final Collection<T> objects) {
+        clear();
         for (T object : objects) {
-            if (!insert(object)) {
+            if (!insert(object, false)) {
                 return false;
             }
         }
+        database.persistData(aspectKey, this);
         return true;
     }
 
     public boolean insert(final T object) {
+        return insert(object, true);
+    }
+
+    public boolean insert(final T object, final boolean shouldPersist) {
         try {
             this.objects.put(object.getId(), object);
+            if (shouldPersist) {
+                database.persistData(aspectKey, this);
+            }
             return true;
         } catch (Exception e) {
             return false;

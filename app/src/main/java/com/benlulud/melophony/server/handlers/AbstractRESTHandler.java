@@ -1,8 +1,10 @@
 package com.benlulud.melophony.server.handlers;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,7 +26,7 @@ import com.benlulud.melophony.database.DatabaseAspect;
 import com.benlulud.melophony.database.IModel;
 import com.benlulud.melophony.server.ServerUtils;
 import com.benlulud.melophony.server.SessionAdapter;
-
+import com.benlulud.melophony.webapp.Constants;
 
 
 public abstract class AbstractRESTHandler<T extends IModel> extends DefaultHandler {
@@ -53,6 +55,7 @@ public abstract class AbstractRESTHandler<T extends IModel> extends DefaultHandl
     // Request context
     protected SessionAdapter session;
     protected String data;
+    protected File file;
 
     public AbstractRESTHandler(Class<T> cls, String aspectName) {
         this.cls = cls;
@@ -64,6 +67,7 @@ public abstract class AbstractRESTHandler<T extends IModel> extends DefaultHandl
         this.responders = getResponders();
         this.session = null;
         this.data = "";
+        this.file = null;
     }
 
     public Map<String, Collection<Method>> getPaths() {
@@ -257,16 +261,32 @@ public abstract class AbstractRESTHandler<T extends IModel> extends DefaultHandl
         Log.i(TAG, "Using " + aspectName + " handler to respond");
         try {
             this.session = (SessionAdapter) session;
+            final Map<String, String> headers = session.getHeaders();
+            Log.d(TAG, "Headers: " + headers.toString());
 
             Integer contentLength = 0;
             try {
-                contentLength = Integer.parseInt(session.getHeaders().get("content-length"));
-                Log.d(TAG, "Read Content-Length: " + contentLength);
+                contentLength = Integer.parseInt(headers.get("content-length"));
             } catch (Exception e) {}
-            byte[] buffer = new byte[contentLength];
-            session.getInputStream().read(buffer, 0, contentLength);
-            Log.d(TAG, "RequestBody: " + new String(buffer));
-            this.data = new String(buffer);
+
+            final String contentType = headers.get("content-type");
+            if (contentType != null && contentType.startsWith(Constants.MULTIPART_TYPE)) {
+                final Map<String, String> formData = new HashMap<String, String>();
+                session.parseBody(formData);
+                final List<String> jsonParameter = session.getParameters().get(Constants.MULTIPART_JSON_DATA_KEY);
+                if (jsonParameter != null && jsonParameter.size() == 1) {
+                    this.data = jsonParameter.get(0);
+                }
+                final String tmpFilePath = formData.get(Constants.MULTIPART_FILE_DATA_KEY);
+                if (tmpFilePath != null) {
+                    this.file = new File(tmpFilePath);
+                }
+            } else {
+                byte[] buffer = new byte[contentLength];
+                session.getInputStream().read(buffer, 0, contentLength);
+                Log.d(TAG, "RequestBody: " + new String(buffer));
+                this.data = new String(buffer);
+            }
         } catch (Exception e) {
             Log.e(TAG, "Unable to parse body: ", e);
             this.data = "";
