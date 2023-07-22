@@ -28,16 +28,27 @@ public class ArtistHandler extends AbstractRESTHandler<Artist> {
         super(Artist.class, "artist");
         this.artistApi = new ArtistApi();
 
+        setResponder("POST_api/artist", new IPathResponder() {
+            public Response respond(final int id, final String data) {
+                final Artist artist = gson.fromJson(data, Artist.class);
+                artist.setImageName(ServerUtils.downloadImageIfRequired(artist.getImageUrl(), db.getFile(Constants.ARTIST_IMAGES_DIR), null, null));
+                return create(artist);
+            }
+        });
         setResponder("PATCH_api/artist/:id", new IPathResponder() {
             public Response respond(final int id, final String data) {
                 final Artist artist = aspect.get(id);
                 final Artist modifications = gson.fromJson(data, Artist.class);
                 if (artist != null && modifications != null) {
+                    final String imageName = ServerUtils.downloadImageIfRequired(
+                        modifications.getImageUrl(), db.getFile(Constants.ARTIST_IMAGES_DIR),
+                        artist.getImageUrl(), artist.getImageName()
+                    );
                     return update(id,
                         new Artist(artist.getUser()).id(artist.getId())
                         .name(ifChange(modifications.getName(), artist.getName()))
                         .imageUrl(ifChange(modifications.getImageUrl(), artist.getImageUrl()))
-                        .imageName(ifChange(modifications.getImageName(), artist.getImageName()))
+                        .imageName(imageName)
                     );
                 }
                 return ServerUtils.notFound();

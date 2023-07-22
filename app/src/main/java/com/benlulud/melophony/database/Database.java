@@ -148,8 +148,12 @@ public class Database {
         editor.commit();
     }
 
+    public File getFile(final String directoryName) {
+        return new File(context.getFilesDir(), directoryName);
+    }
+
     public File getFile(final String directoryName, final String fileName) {
-        final File directory = new File(context.getFilesDir(), directoryName);
+        final File directory = getFile(directoryName);
         if (!directory.exists()) {
             directory.mkdirs();
         }
@@ -288,7 +292,7 @@ public class Database {
                             return null;
                         }
                         public File download(final Playlist playlist) throws ApiException {
-                            return playlistApi.playlistImage(playlist.getId());
+                            return playlistApi.playlistImage(playlist.getId(), playlist.getImageName());
                         }
                     });
                     synchronizeFiles(artists, listener, Constants.ARTISTS_KEY, new IDownloader<Artist>() {
@@ -299,7 +303,7 @@ public class Database {
                             return null;
                         }
                         public File download(final Artist artist) throws ApiException {
-                            return artistApi.artistImage(artist.getId());
+                            return artistApi.artistImage(artist.getId(), artist.getImageName());
                         }
                     });
                     synchronizeFiles(files, listener, Constants.FILES_KEY, new IDownloader<ModelFile>() {
@@ -314,7 +318,7 @@ public class Database {
                         }
                     });
                 } catch (Exception e) {
-                    Log.e(TAG, "Unauthorized to download files, aborting...");
+                    Log.e(TAG, "Unauthorized to download files, aborting: ", e);
                 }
                 Log.i(TAG, "File synchronization finished");
                 listener.onSynchronizationCompleted();
