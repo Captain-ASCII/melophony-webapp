@@ -11,7 +11,7 @@ android {
     minSdkVersion 23
     targetSdkVersion 26
     versionCode 1
-    versionName "1.0"
+    versionName "1.0.0"
   }
 }
 
@@ -28,7 +28,7 @@ dependencies {
   implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
   implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
-  implementation "com.android.support:appcompat-v7:27.0.0"
+  implementation 'com.android.support:appcompat-v7:27.0.0'
 
   implementation fileTree(dir: 'libs', includes: ['*.jar'])
 }
