@@ -183,7 +183,9 @@ public class Database {
 
     public void clear() {
         // Memory data
-        aspects.forEach(aspect -> aspect.clear());
+        for (final DatabaseAspect aspect : aspects) {
+            aspect.clear();
+        }
 
         // Persisted data
         final Editor editor = sharedPrefs.edit();
@@ -254,6 +256,8 @@ public class Database {
             result = false;
         }
         Log.i(TAG, "Synchronization result: " + result);
+
+        Log.i(TAG, "####: " + artists.getAll().size());
 
         for (final Playlist playlist : playlists.getAll()) {
             synchronizationState.put(getKey(Constants.PLAYLISTS_KEY, playlist), new SynchronizationItem("'" + playlist.getName() + "' image", false));
