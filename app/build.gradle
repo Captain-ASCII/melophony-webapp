@@ -4,7 +4,7 @@ plugins {
 
 android {
   buildToolsVersion "30.0.2"
-  compileSdkVersion 27
+  compileSdkVersion 31
 
   defaultConfig {
     applicationId "com.benlulud.melophony.webapp"
@@ -28,7 +28,12 @@ dependencies {
   implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
   implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
-  implementation 'com.android.support:appcompat-v7:27.0.0'
+
+  implementation 'androidx.core:core:1.8.0'
+  implementation 'androidx.appcompat:appcompat:1.0.0'
+  implementation 'androidx.media:media:1.6.0'
+
+  implementation 'androidx.cardview:cardview:1.0.0'
 
   implementation fileTree(dir: 'libs', includes: ['*.jar'])
 }
