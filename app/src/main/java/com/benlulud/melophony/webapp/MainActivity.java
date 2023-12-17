@@ -48,6 +48,7 @@ public class MainActivity extends Activity {
     private Router router;
     private ViewGroup activityView;
     private WebView webView;
+    private MediaManagerService mediaManagerService;
     private boolean isWebViewAttachedToWindow;
 
     private ValueCallback<Uri> mUploadMessage;
@@ -181,8 +182,6 @@ public class MainActivity extends Activity {
         webView.addJavascriptInterface(new JavaScriptInterface(this), "Android");
 
         webView.setWebChromeClient(new WebChromeClient() {
-            // For 3.0+ Devices (Start)
-            // onActivityResult attached before constructor
             protected void openFileChooser(ValueCallback uploadMsg, String acceptType) {
                 mUploadMessage = uploadMsg;
                 Intent i = new Intent(Intent.ACTION_GET_CONTENT);
@@ -229,26 +228,16 @@ public class MainActivity extends Activity {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (requestCode == REQUEST_SELECT_FILE) {
-                if (uploadMessage == null)
-                    return;
-                uploadMessage.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, intent));
-                uploadMessage = null;
-            }
-        } else if (requestCode == FILECHOOSER_RESULTCODE) {
-            if (null == mUploadMessage) {
+        if (requestCode == REQUEST_SELECT_FILE) {
+            if (uploadMessage == null) {
                 return;
             }
-            Uri result = intent == null || resultCode != RESULT_OK ? null : intent.getData();
-            mUploadMessage.onReceiveValue(result);
-            mUploadMessage = null;
-        } else {
-            Toast.makeText(context, "Failed to load audio file", Toast.LENGTH_LONG).show();
+            uploadMessage.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, intent));
+            uploadMessage = null;
         }
     }
 
-    public static class JavaScriptInterface {
+    public class JavaScriptInterface {
         private Context context;
 
         JavaScriptInterface(final Context context) {
@@ -259,5 +248,39 @@ public class MainActivity extends Activity {
         public boolean isAndroidWebApp() {
             return true;
         }
+
+        @JavascriptInterface
+        public boolean onPlayerStateChange(final boolean isPlaying, final String title, final String artistName) {
+            mediaManagerService.addNotification(isPlaying, title, artistName);
+            return true;
+        }
+    }
+
+    private void startMediaManagerService() {
+        final Intent serviceIntent = new Intent(this, MediaManagerService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
+        }
+    }
+
+    private void bindMediaManagerService() {
+        ServiceConnection serviceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder binder) {
+                Log.i(TAG, "onServiceConnected");
+                MediaManagerService.MediaManagerBinder mmBinder = (MediaManagerService.MediaManagerBinder) binder;
+                mediaManagerService = mmBinder.getService();
+                mediaManagerService.setWebView(webView);
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                Log.i(TAG, "onServiceDisconnected");
+                mediaManagerService = null;
+            }
+        };
+        bindService(new Intent(this, MediaManagerService.class), serviceConnection, Context.BIND_AUTO_CREATE);
     }
 }
